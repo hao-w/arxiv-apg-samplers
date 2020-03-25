@@ -690,14 +690,14 @@ The advantage of this parameterization is it allows us to train approximate Gibb
 \begin{figure*}[t!]
   \centering
   \begin{subfigure}[t]{0.5\textwidth}
-  \includegraphics[width=85mm]{figures/gmm_samples_2datasets.pdf}
+  \includegraphics[width=85mm]{figures/gmm_samples_4datasets.pdf}
 %   \vspace*{-1mm}
   \caption{GMM}
   \label{fig:samples-gmm}
   \vspace{-1ex}
   \end{subfigure}%
   \begin{subfigure}[t]{0.5\textwidth}
-  \includegraphics[width=85mm]{figures/dgmm_samples_2datasets.pdf}
+  \includegraphics[width=85mm]{figures/dgmm_samples_4datasets.pdf}
 %   \vspace*{-1mm}
   \caption{DMM}
   \label{fig:samples-dgmm}
@@ -758,9 +758,9 @@ APG samplers are not only able to scale to models with higher complexity, but al
 \subsection{Baselines}
 \label{sec:baselines}
 
-We compare our APG sampler with three baseline methods. The first is RWS, the second is a bootstrapped population Gibbs (BPG) sampler, and a method that augments RWS with Hamiltonian Monte Carlo (HMC) updates, which is analogous to the method proposed by \citet{hoffman2017learning}.
+We compare our APG sampler with three baseline methods. The first is RWS. The second is a bootstrapped population Gibbs (BPG) sampler, which uses exactly the same sampling scheme as in Algorithm~\ref{alg:amortized-gibbs}, but proposes from the prior rather than from  approximate Gibbs kernels. This serves  to evaluate whether learning proposals improves the quality of inference results. The third is a method that augments RWS with Hamiltonian Monte Carlo (HMC) updates, which is analogous to the method proposed by \citet{hoffman2017learning}. This serves to compare Gibbs updates to those that can be obtained with state-of-the-art MCMC methods.
 
-The BPG sampler uses exactly the same sampling scheme as in Algorithm~\ref{alg:amortized-gibbs}, but proposes from the prior rather than from  approximate Gibbs kernels. This serves  to evaluate whether learning proposals improves the quality of inference results. 
+%The BPG sampler uses exactly the same sampling scheme as in Algorithm~\ref{alg:amortized-gibbs}, but proposes from the prior rather than from  approximate Gibbs kernels. This serves  to evaluate whether learning proposals improves the quality of inference results. 
 
 In the HMC-RWS baseline, we employ the standard RWS gradient estimators from Equations~\ref{eq:grad-phi-rws} and~\ref{eq:grad-theta}, but update samples from the standard encoder using HMC. In the bouncing MNIST model, all variables are continuous and are updated jointly. In the GMM, we use HMC to sample from the marginal for continuous variables (by marginalizing over cluster assignments via direct summation), and then sample discrete variables from enumerated Gibbs conditionals to evaluate the full log joint $\log p_\theta(x,z)$. For the DMM we perform the same procedure, but use HMC to sample from the conditional distribution given discrete variables, because direct summation is not possible in this model. 
 
@@ -801,25 +801,6 @@ In this model, the global variables $z^\textsc{g} = \{\mu_{1:I}, \tau_{1:I}\}$ a
 \end{align*}
 where $\mathrm{I}[z_n \!=\! i]$ evaluates to 1 if the equality holds, and 0 otherwise.
 
-\begin{table}[!b]
-    % \vspace{-1.5em}
-    \centering
-    \caption{Bouncing MNIST performance. Mean-squared error between test instance and its reconstruction across 5000 video instances with different number of time steps $T$ and digits $D$. We use a fixed sampling budget of $K \cdot L=1000$. APG samplers achieve substantial improvements relative to RWS and HMC-RWS.}
-    % \vspace{0.5em}
-    \begin{tabularx}{\columnwidth}{ccccc}
-    \toprule
-        & RWS & HMC-RWS & APG & APG \\
-        &  &  K=20, LF=10 & K=10 & K=20 \\
-    \midrule
-    D=5, T=20 & 265.1 & 261.2 & 117.7 & \textbf{103.8}\\
-    \hspace{0.5em}D=5, T=100 & 272.1 & 267.9  & 115.4 & \textbf{102.3}\\
-    %\hline
-    D=3, T=20 & 134.0 & 124.1 & 60.4 & \textbf{58.9} \\   
-    \hspace{0.5em}D=3, T=100 & 137.3 & 127.4 & 56.0 & \textbf{55.7} \\
-    \bottomrule
-    \end{tabularx}
-    \label{table:mse-bmnist}
-\end{table}
 
 
 We employ a variational distribution that iterates over $q_\f(c \mid x, \mu, \tau)$ and $q_\f(\mu, \tau \mid x, c)$ , using pointwise neural sufficient statistics modeled after the ones in the analytical updates.
@@ -833,7 +814,7 @@ We train our model on 20,000 GMM instances, each containing $I = 3$ clusters and
 \end{figure}
 % We compare the APG sampler to samples from a standard encoder with MLP and LSTM architectures,  which is trained using reweighted wake-sleep (RWS). Both architectures are parameterized using the same neural sufficient statistics as the APG sampler.
 
-Figure~\ref{fig:samples-gmm} shows a single sample in a test instance with $N=100$ points. Even when using a parameterization that employs neural sufficient statistics, the RWS encoder fails to propose reasonable clusters, whereas the APG sampler converges within 12 sweeps in GMMs with more variables than training instances.
+Figure~\ref{fig:samples-gmm} shows single samples in four test instance, each containing $N=100$ points. Even when using a parameterization that employs neural sufficient statistics, the RWS encoder fails to propose reasonable clusters, whereas the APG sampler converges within 12 sweeps in GMMs with more variables than training instances.
 
 We compare the APG samplers with true Gibbs samplers and the baselines in section~\ref{sec:baselines}. Figure~\ref{fig:convergence-gmm} shows that the APG sampler converges to the $p_\q(x, z)$ achieved the true Gibbs sampler; it outperforms HMC-RWS even when we run it with 10 times the computation budget; and learned proposals substantially improve on inference since BPG does not converge even with 100x computational budget. In addition, we verify the approximate Gibbs kernel converges to the true Gibbs kernel (see Appendix~\ref{appendix-kl-gmm-training}).
 
@@ -868,6 +849,7 @@ We compare the APG samplers with true Gibbs samplers and the baselines in sectio
 \label{table:log-joint-all}
 \end{table*}
 
+
 \begin{figure*}[!t]
     % \vspace{-0.5em}
   \centering
@@ -881,8 +863,6 @@ We compare the APG samplers with true Gibbs samplers and the baselines in sectio
   \label{mnist-qualitative}
 %   \vspace{-0.5em}
 \end{figure*}
-
-
 
 Moreover, we compare joint block updates $\{\mu, \tau, c\}$ with decomposed blocks $\{\mu, \tau\}, \{c\}$, for varying number of sweeps (see Figure~\ref{fig:fixed-budget-gmm}). % and it is hard to compute a lower/upper bound at each sweep. Also 
 We additionally assess sample quality using the effective sample size (ESS)
@@ -912,9 +892,9 @@ In the deep generative mixture model $p_\q(\x, \z)$ our data is a corpus of ring
 \end{align*}
 Here $\mu_i$ is the center of $i$th ring. Given a cluster assignment $c_n$ and an embedding $\alpha_n$ which goes into a MLP decoder $g_\q$, we sample a data point $x_n$ with 2D Gaussian noise. 
 
-We employ a variational distribution that iterates over  $q_\f(c, \alpha | x, \mu)$ and $q_\f(\mu | x, c, \alpha)$. We train our model on 20K DMM instances, each containing $I = 4$ clusters and $N=200$ points, with $K=8$ sweeps, $L=10$ particles, 20 instances per batch, learning rate $10^{-4}$, and $3\times10^5$ gradient steps.
+We employ a variational distribution that iterates over  $q_\f(c, \alpha | x, \mu)$ and $q_\f(\mu | x, c, \alpha)$. We train on 20K DMM instances, each containing $I = 4$ clusters and $N=200$ points, with $K=8$ sweeps, $L=10$ particles, 20 instances per batch, learning rate $10^{-4}$, and $3\times10^5$ gradient steps.
 
-Once again, we compare the APG sampler with the encoders using RWS. Figure~\ref{fig:samples-dgmm} shows visualization of a single sample from variational distribution in a DMM instance. The APG sampler scales to a large range of numbers of variables, whereas a standard encoder trained using RWS fails to produce reasonable proposals.
+Once again, we compare the APG sampler with the encoders using RWS. Figure~\ref{fig:samples-dgmm} shows visualization of single samples in four test instances, each containing $N=600$ data points. The APG sampler scales to a large range of numbers of variables, whereas a standard encoder trained using RWS fails to produce reasonable proposals.
 
 \subsection{Time Series Model -- Bouncing MNIST}
 
@@ -955,7 +935,25 @@ In the bouncing MNIST model, our data is a corpus of video frames that contain m
 \end{align*}
 % \vspace{-0.5em}
 where $\z_{1:D}^{\mathrm{what}}$ are the latent code of digits, and $\z_{1:D, 1:T}^{\mathrm{where}}$ are time-dependent positions. ST is a spatial transformer \cite{jaderberg2015spatial} that maps the output of a MLP decoder $\mu_\q$, i.e.~logits for a $28\times28$ MNIST image, onto a 96$\times$96 canvas based on $z^{\mathrm{where}}_{d, t}$. 
-
+\begin{table}[!t]
+    % \vspace{-1.5em}
+    \centering
+    \caption{Bouncing MNIST performance. Mean-squared error between test instance and its reconstruction across 5000 video instances with different number of time steps $T$ and digits $D$. We use a fixed sampling budget of $K \cdot L=1000$. APG samplers achieve substantial improvements relative to RWS and HMC-RWS.}
+    % \vspace{0.5em}
+    \begin{tabularx}{\columnwidth}{ccccc}
+    \toprule
+        & RWS & HMC-RWS & APG & APG \\
+        &  &  K=20, LF=10 & K=10 & K=20 \\
+    \midrule
+    D=5, T=20 & 265.1 & 261.2 & 117.7 & \textbf{103.8}\\
+    \hspace{0.5em}D=5, T=100 & 272.1 & 267.9  & 115.4 & \textbf{102.3}\\
+    %\hline
+    D=3, T=20 & 134.0 & 124.1 & 60.4 & \textbf{58.9} \\   
+    \hspace{0.5em}D=3, T=100 & 137.3 & 127.4 & 56.0 & \textbf{55.7} \\
+    \bottomrule
+    \end{tabularx}
+    \label{table:mse-bmnist}
+\end{table}
 We employ a block update that decomposes the variables into $T + 1$ blocks $(z_{1:D}^{\mathrm{what}}, z_{1:D, 1}^{\mathrm{where}}, z_{1:D, 2}^{\mathrm{where}}, \dotsc, z_{1:D, T}^{\mathrm{where}})$.
 % Empirically this works better than splitting the latent variables into global and local variables, since resampling at each time step $t$ helps disentangle the digit locations if they overlap.
 We train our model on 60000 bouncing MNIST instances, each containing $T=10$ time steps and $D=3$ digits, with $K=5$ sweeps, $L=10$ particles, $K=5$ instances per batch, learning rate $10^{-4}$, and $1.2\times10^7$ gradient steps (see Appendix \ref{appendix:architecture} for architecture).
@@ -972,8 +970,9 @@ We show that APG samplers can train structured deep generative models with hundr
 % One of the challenges in amortized inference for deep generative models is learning high-quality proposals for models with a structured prior over a high-dimensional set of latent variables. These priors arise naturally when, rather than encoding a single data point (e.g.~an image), we wish to encode a dataset (e.g.~a sequence of images). 
 % Even for apparently simple problems, such as inferring the cluster parameters and assignments in a mixture model, standard encoders often fail to produce good samples. One of the reasons for this is that it is fundamentally difficult to jointly generate proposals for a high-dimensional set of latent variables.
 
-APG samplers are very general, and offer a path towards the development of deep generative models that incorporate structured priors to provide meaningful inductive biases in settings where we have little or no supervision. These methods have particular strengths in problems with global variables, but more generally make it possible to design amortized approaches that exploit conditional independence. Moreover, our parameterization in terms of neural sufficient statistics makes it comparatively easy to design models that scale to much larger number of latent variables and thus generalize to datasets that vary in size. 
-Immediate lines of future work are to compare the approach in this paper, which learns kernels that leave the target density invariant, with approaches that perform annealing, in which the learned kernels are assymmetric in the sense that they gradually transform the initial encoder distribution to the target density. 
+APG samplers are very general, and offer a path towards the development of deep generative models that incorporate structured priors to provide meaningful inductive biases in settings where we have little or no supervision. These methods have particular strengths in problems with global variables, but more generally make it possible to design amortized approaches that exploit conditional independence. Our parameterization in terms of neural sufficient statistics makes it comparatively easy to design models that scale to much larger number of latent variables and thus generalize to datasets that vary in size. 
+
+Immediate lines of future work are to compare the approach in this paper, which learns kernels that leave the target density invariant, with approaches that perform annealing, in which the learned kernels are asymmetric in the sense that they gradually transform the initial encoder distribution to the target density. 
 
 \section{Acknowledgements}
 
@@ -990,7 +989,7 @@ This work was supported by the Intel Corporation, NSF award 1835309, the DARPA L
 % \vskip 0.3in
 \section{Gradient of the generative model}% $p_\q(x \mid z)$}
 \label{appendix:grad-theta}
-We show that the gradient of the marginal $\nabla_\q p_\q(x)$ can be estimated using self-normalized importance sampling. First of all, we express the expected gradient of the log joint as
+We show that the gradient of the marginal $\nabla_\q \, \log \, p_\q(x)$ can be estimated using self-normalized importance sampling. First of all, we express the expected gradient of the log joint as
 \begin{align*}
     \mathbb{E}_{p_\q(\z | \x)} 
     \left[
@@ -1644,24 +1643,25 @@ In GMM experiment, we train the model with different number of sweeps $K$ under 
 \section{Comparison between APG sampler and RWS method in Bouncing MNIST}
 \label{appendix:bmnist-comparison-rws}
 We visualize the inference results and reconstruction from the APG sampler and reweighted wake-sleep method. We can see that APG sampler significantly improves both tracking inference results and the reconstruction on instances with $T=20$ time steps and $D=5$ digits. We can see that the APG sampler achieves substantial results while the RWS method does not make reasonable prediction at all.
+
+
 \begin{figure*}[!h]
 \centering
-\includegraphics[width=150mm]{figures/bmnist-5digits-samples-with-rws-2.pdf}
+\includegraphics[width=150mm]{figures/bmnist-5digits-samples-with-rws-3.pdf}
 \caption{Example 1.}
 \end{figure*}
 
 \begin{figure*}[!h]
 \centering
-\includegraphics[width=150mm]{figures/bmnist-5digits-samples-with-rws-3.pdf}
+\includegraphics[width=150mm]{figures/bmnist-5digits-samples-with-rws-4.pdf}
 \caption{Example 2.}
 \end{figure*}
 
 \begin{figure*}[!h]
 \centering
-\includegraphics[width=150mm]{figures/bmnist-5digits-samples-with-rws-4.pdf}
+\includegraphics[width=150mm]{figures/bmnist-5digits-samples-with-rws-2.pdf}
 \caption{Example 3.}
 \end{figure*}
-
 
 % \newpage
 \section{Inference Results and Reconstruction on large time steps Bouncing MNIST}
